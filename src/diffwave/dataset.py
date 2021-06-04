@@ -24,28 +24,28 @@ from torch.utils.data.distributed import DistributedSampler
 
 
 class NumpyDataset(torch.utils.data.Dataset):
-  def __init__(self, clean_path, noisy_npy_paths):
+  def __init__(self, wav_path, npy_paths):
     super().__init__()
     # self.filenames = []
-    self.clean_path =clean_path
-    self.noisy_specnames = []
-    for path in noisy_npy_paths:
-      self.noisy_specnames += glob(f'{path}/**/*.wav.spec.npy', recursive=True)
+    self.wav_path =wav_path
+    self.specnames = []
+    for path in npy_paths:
+      self.specnames += glob(f'{path}/**/*.wav.spec.npy', recursive=True)
 
   def __len__(self):
-    return len(self.noisy_specnames)
+    return len(self.specnames)
 
   def __getitem__(self, idx):
     # audio_filename = self.filenames[idx]
     # spec_filename = f'{audio_filename}.spec.npy'
-    spec_filename = self.noisy_specnames[idx]
+    spec_filename = self.specnames[idx]
     name = "_".join(spec_filename.split("/")[-1].split(".")[0].split("_")[:-1]) + "_ORG.wav"
-    audio_filename = os.path.join(self.clean_path,name)
+    audio_filename = os.path.join(self.wav_path,name)
     signal, _ = torchaudio.load_wav(audio_filename)
     spectrogram = np.load(spec_filename)
     return {
         'audio': signal[0] / 32767.5,
-        'spectrogram': spectrogram  #.T
+        'spectrogram': spectrogram.T
     }
 
 

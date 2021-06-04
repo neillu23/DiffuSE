@@ -70,30 +70,34 @@ def make_spectrum(filename=None, y=None, is_slice=False, feature_type='logmag', 
 
 
 def transform(filename,indir,outdir):
-  # audio, sr = T.load_wav(filename)
-  # if params.sample_rate != sr:
-  #   raise ValueError(f'Invalid sample rate {sr}.')
-  # audio = torch.clamp(audio[0] / 32767.5, -1.0, 1.0)
+  audio, sr = T.load_wav(filename)
+  if params.sample_rate != sr:
+    raise ValueError(f'Invalid sample rate {sr}.')
+  audio = torch.clamp(audio[0] / 32767.5, -1.0, 1.0)
 
-  # mel_args = {
-  #     'sample_rate': sr,
-  #     'win_length': params.hop_samples * 4,
-  #     'hop_length': params.hop_samples,
-  #     'n_fft': params.n_fft,
-  #     'f_min': 20.0,
-  #     'f_max': sr / 2.0,
-  #     'n_mels': params.n_mels,
-  #     'power': 1.0,
-  #     'normalized': True,
-  # }
-  # mel_spec_transform = TT.MelSpectrogram(**mel_args)
-  spec, _, _ = make_spectrum(filename,FRAMELENGTH=params.n_fft, SHIFT=params.hop_samples)
+  mel_args = {
+      'sample_rate': sr,
+      'win_length': params.hop_samples * 4,
+      'hop_length': params.hop_samples,
+      'n_fft': params.n_fft,
+      'f_min': 20.0,
+      'f_max': sr / 2.0,
+      'n_mels': params.n_mels,
+      'power': 1.0,
+      'normalized': True,
+  }
+  mel_spec_transform = TT.MelSpectrogram(**mel_args)
 
   with torch.no_grad():
-    # spectrogram = mel_spec_transform(audio)
-    # spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
-    # spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
-    np.save(f'{filename.replace(indir,outdir)}.spec.npy', spec.transpose())#.cpu().numpy())
+    spectrogram = mel_spec_transform(audio)
+    spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
+    spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
+    np.save(f'{filename.replace(indir,outdir)}.spec.npy', spectrogram.cpu().numpy()) 
+
+def spec_transform(filename,indir,outdir):
+    spec, _, _ = make_spectrum(filename,FRAMELENGTH=params.n_fft, SHIFT=params.hop_samples)
+    np.save(f'{filename.replace(indir,outdir)}.spec.npy', spec)
+
 
 def choose_channel(n_files):
     fins = []
@@ -108,10 +112,8 @@ def choose_channel(n_files):
 
 def main(args):
   filenames = glob(f'{args.dir}/**/*.wav', recursive=True)
-  filenames = choose_channel(filenames)
-  # for file in filenames:
-  #       transform(file,args.dir,args.outdir)
-  # pdb.set_trace()
+  if args.se:
+      filenames = choose_channel(filenames)
   os.mkdir(args.outdir)
   with ProcessPoolExecutor() as executor:
     list(tqdm(executor.map(transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
@@ -123,4 +125,7 @@ if __name__ == '__main__':
       help='directory containing .wav files for training')
   parser.add_argument('outdir',
       help='output directory containing .npy files for training')
+  parser.add_argument('--se', dest='se', action='store_true')
+  parser.add_argument('--vocoder', dest='se', action='store_false')
+  parser.set_defaults(feature=False)
   main(parser.parse_args())
