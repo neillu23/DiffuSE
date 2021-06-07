@@ -41,7 +41,8 @@ params = AttrDict(
     # Data params
     sample_rate=16000,
     #n_mels set to the npy size
-    n_mels= 513, #80,
+    n_mels=80, 
+    # n_specs=513,
     n_fft=1024,
     hop_samples=256,
     # frame number at once

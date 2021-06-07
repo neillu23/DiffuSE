@@ -20,8 +20,8 @@ import torchaudio
 
 from argparse import ArgumentParser
 
-from diffwave.params import AttrDict, params as base_params
-from diffwave.model import DiffWave
+from params import AttrDict, params as base_params
+from model import DiffWave
 
 from os import path
 from glob import glob
@@ -71,7 +71,6 @@ def predict(spectrogram, model_dir=None, params=None, device=torch.device('cuda'
     T = np.array(T, dtype=np.float32)
 
     # Expand rank 2 tensors by adding a batch dimension.
-    spectrogram = spectrogram.T
     if len(spectrogram.shape) == 2:
       spectrogram = spectrogram.unsqueeze(0)
     spectrogram = spectrogram.to(device)
@@ -96,6 +95,7 @@ def main(args):
   noisy_specnames = noisy_specnames[:10]
   for noisy_spec in tqdm(noisy_specnames):
     spectrogram = torch.from_numpy(np.load(noisy_spec))
+    # print(spectrogram.shape)
     audio, sr = predict(spectrogram, model_dir=args.model_dir, fast_sampling=args.fast)
     output_name = path.join(args.output, ".".join(noisy_spec.split("/")[-1].split(".")[:-2]))
     print(output_name)

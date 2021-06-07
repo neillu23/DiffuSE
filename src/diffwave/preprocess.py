@@ -27,7 +27,7 @@ from concurrent.futures import ProcessPoolExecutor
 from glob import glob
 from tqdm import tqdm
 
-from diffwave.params import params
+from params import params
 
 random.seed(23)
 
@@ -92,6 +92,7 @@ def transform(filename,indir,outdir):
     spectrogram = mel_spec_transform(audio)
     spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
     spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
+    # print(spectrogram.shape)
     np.save(f'{filename.replace(indir,outdir)}.spec.npy', spectrogram.cpu().numpy()) 
 
 def spec_transform(filename,indir,outdir):
@@ -112,11 +113,16 @@ def choose_channel(n_files):
 
 def main(args):
   filenames = glob(f'{args.dir}/**/*.wav', recursive=True)
-  if args.se:
-      filenames = choose_channel(filenames)
   os.mkdir(args.outdir)
-  with ProcessPoolExecutor() as executor:
-    list(tqdm(executor.map(transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
+  if args.se or args.test:
+    filenames = choose_channel(filenames)
+
+  if args.se:
+    with ProcessPoolExecutor() as executor:
+        list(tqdm(executor.map(spec_transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
+  else:
+    with ProcessPoolExecutor() as executor:
+        list(tqdm(executor.map(transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
 
 
 if __name__ == '__main__':
@@ -127,5 +133,7 @@ if __name__ == '__main__':
       help='output directory containing .npy files for training')
   parser.add_argument('--se', dest='se', action='store_true')
   parser.add_argument('--vocoder', dest='se', action='store_false')
+  parser.add_argument('--train', dest='test', action='store_false')
+  parser.add_argument('--test', dest='test', action='store_true')
   parser.set_defaults(feature=False)
   main(parser.parse_args())

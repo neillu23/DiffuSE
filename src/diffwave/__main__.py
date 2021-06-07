@@ -17,8 +17,8 @@ from argparse import ArgumentParser
 from torch.cuda import device_count
 from torch.multiprocessing import spawn
 
-from diffwave.learner import train, train_distributed
-from diffwave.params import params
+from learner import train, train_distributed
+from params import params
 
 
 def _get_free_port():
@@ -51,4 +51,7 @@ if __name__ == '__main__':
       help='maximum number of training steps')
   parser.add_argument('--fp16', action='store_true', default=False,
       help='use 16-bit floating point operations for training')
+  parser.add_argument('--se', dest='se', action='store_true')
+  parser.add_argument('--vocoder', dest='se', action='store_false')
+  parser.set_defaults(feature=False)
   main(parser.parse_args())

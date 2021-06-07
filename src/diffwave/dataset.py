@@ -29,6 +29,7 @@ class NumpyDataset(torch.utils.data.Dataset):
     # self.filenames = []
     self.wav_path =wav_path
     self.specnames = []
+    print(npy_paths)
     for path in npy_paths:
       self.specnames += glob(f'{path}/**/*.wav.spec.npy', recursive=True)
 
