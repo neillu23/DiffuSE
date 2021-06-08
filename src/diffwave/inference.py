@@ -98,7 +98,7 @@ def main(args):
     # print(spectrogram.shape)
     audio, sr = predict(spectrogram, model_dir=args.model_dir, fast_sampling=args.fast)
     output_name = path.join(args.output, ".".join(noisy_spec.split("/")[-1].split(".")[:-2]))
-    print(output_name)
+    # print(output_name)
     torchaudio.save(output_name, audio.cpu(), sample_rate=sr)
 
 

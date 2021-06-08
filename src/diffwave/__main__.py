@@ -53,5 +53,7 @@ if __name__ == '__main__':
       help='use 16-bit floating point operations for training')
   parser.add_argument('--se', dest='se', action='store_true')
   parser.add_argument('--vocoder', dest='se', action='store_false')
-  parser.set_defaults(feature=False)
+  parser.add_argument('--pretrain', dest='pretrain', action='store_true')
+  parser.set_defaults(se=False)
+  parser.set_defaults(pretrain=False)
   main(parser.parse_args())
