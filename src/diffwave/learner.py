@@ -21,6 +21,7 @@ import torch.nn as nn
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+import pdb
 
 from dataset import from_path as dataset_from_path
 from model import DiffWave
@@ -103,13 +104,33 @@ class DiffWaveLearner:
         os.unlink(link_name)
       os.symlink(save_basename, link_name)
 
-  def restore_from_checkpoint(self,pretrain="False", filename='weights'):
-    try:
-      checkpoint = torch.load(f'{self.model_dir}/{filename}.pt')
-      self.load_state_dict(checkpoint,pretrain)
-      return True
-    except FileNotFoundError:
-      return False
+  def restore_from_checkpoint(self,pretrain_path=None, filename='weights'):
+    # pdb.set_trace()
+    if pretrain_path!=None:
+      checkpoint = torch.load(pretrain_path)
+      self.load_state_dict(checkpoint,True)
+    else:
+      try:
+        checkpoint = torch.load(f'{self.model_dir}/{filename}.pt')
+        self.load_state_dict(checkpoint)
+        return True
+      except FileNotFoundError:
+        return False
+
+  def fix_parameter(self):
+    # pdb.set_trace()
+    for param in self.model.parameters():
+      param.requires_grad = True
+
+    for layer in self.model.residual_layers:
+      for param in layer.output_projection.parameters():
+        param.requires_grad = False
+
+    for param in self.model.skip_projection.parameters():
+      param.requires_grad = False
+
+    for param in self.model.output_projection.parameters():
+      param.requires_grad = False
 
   def train(self, max_steps=None):
     device = next(self.model.parameters()).device
@@ -172,7 +193,9 @@ def _train_impl(replica_id, model, dataset, args, params):
 
   learner = DiffWaveLearner(args.model_dir, model, dataset, opt, params, fp16=args.fp16)
   learner.is_master = (replica_id == 0)
-  learner.restore_from_checkpoint(args.pretrain)
+  learner.restore_from_checkpoint(args.pretrain_path)
+  if args.pretrain_path != None and args.fix:
+    learner.fix_parameter()
   learner.train(max_steps=args.max_steps)
 
 
