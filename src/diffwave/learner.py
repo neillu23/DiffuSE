@@ -69,14 +69,27 @@ class DiffWaveLearner:
         'scaler': self.scaler.state_dict(),
     }
 
-  def load_state_dict(self, state_dict):
+  def load_state_dict(self, state_dict, pretrain=False):
+    if pretrain:
+      print("WARNING: Remove parameters from model")
+      model_state_dict = state_dict['model']
+      for i in range(30):
+        model_state_dict.pop("residual_layers.{}.conditioner_projection.weight".format(i), None)
     if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
-      self.model.module.load_state_dict(state_dict['model'])
+      if pretrain:
+        self.model.module.load_state_dict(model_state_dict, strict=False)
+      else:
+        self.model.module.load_state_dict(state_dict['model'])
     else:
-      self.model.load_state_dict(state_dict['model'])
-    self.optimizer.load_state_dict(state_dict['optimizer'])
-    self.scaler.load_state_dict(state_dict['scaler'])
-    self.step = state_dict['step']
+      if pretrain:
+        self.model.load_state_dict(model_state_dict, strict=False)
+      else:
+        self.model.load_state_dict(state_dict['model'])
+    
+    if not pretrain:
+      self.optimizer.load_state_dict(state_dict['optimizer'])
+      self.scaler.load_state_dict(state_dict['scaler'])
+      self.step = state_dict['step']
 
   def save_to_checkpoint(self, filename='weights'):
     save_basename = f'{filename}-{self.step}.pt'
@@ -90,10 +103,10 @@ class DiffWaveLearner:
         os.unlink(link_name)
       os.symlink(save_basename, link_name)
 
-  def restore_from_checkpoint(self, filename='weights'):
+  def restore_from_checkpoint(self,pretrain="False", filename='weights'):
     try:
       checkpoint = torch.load(f'{self.model_dir}/{filename}.pt')
-      self.load_state_dict(checkpoint)
+      self.load_state_dict(checkpoint,pretrain)
       return True
     except FileNotFoundError:
       return False
@@ -159,7 +172,7 @@ def _train_impl(replica_id, model, dataset, args, params):
 
   learner = DiffWaveLearner(args.model_dir, model, dataset, opt, params, fp16=args.fp16)
   learner.is_master = (replica_id == 0)
-  learner.restore_from_checkpoint()
+  learner.restore_from_checkpoint(args.pretrain)
   learner.train(max_steps=args.max_steps)
 
 
