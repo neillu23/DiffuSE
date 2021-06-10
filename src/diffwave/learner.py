@@ -121,16 +121,27 @@ class DiffWaveLearner:
     # pdb.set_trace()
     for param in self.model.parameters():
       param.requires_grad = True
+    if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
+      for layer in self.model.module.residual_layers:
+        for param in layer.output_projection.parameters():
+          param.requires_grad = False
 
-    for layer in self.model.residual_layers:
-      for param in layer.output_projection.parameters():
+      for param in self.model.module.skip_projection.parameters():
         param.requires_grad = False
 
-    for param in self.model.skip_projection.parameters():
-      param.requires_grad = False
+      for param in self.model.module.output_projection.parameters():
+        param.requires_grad = False
+        
+    else:
+      for layer in self.model.residual_layers:
+        for param in layer.output_projection.parameters():
+          param.requires_grad = False
 
-    for param in self.model.output_projection.parameters():
-      param.requires_grad = False
+      for param in self.model.skip_projection.parameters():
+        param.requires_grad = False
+
+      for param in self.model.output_projection.parameters():
+        param.requires_grad = False
 
   def train(self, max_steps=None):
     device = next(self.model.parameters()).device

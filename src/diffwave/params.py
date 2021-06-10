@@ -34,14 +34,14 @@ class AttrDict(dict):
 
 params = AttrDict(
     # Training params
-    batch_size=4,
+    batch_size=16,
     learning_rate=2e-4,
     max_grad_norm=None,
 
     # Data params
     sample_rate=16000,
     #n_mels set to the npy size
-    n_mels=80, 
+    n_mels=513, 
     # n_specs=513,
     n_fft=1024,
     hop_samples=256,
