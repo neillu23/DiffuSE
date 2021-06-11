@@ -92,6 +92,8 @@ def predict(spectrogram, model_dir=None, params=None, device=torch.device('cuda'
 
 def main(args):
   noisy_specnames = glob(f'{args.spectrogram_path}/*.wav.spec.npy', recursive=True)
+  noisy_specnames=sorted(noisy_specnames)
+  random.shuffle(noisy_specnames)
   noisy_specnames = noisy_specnames[:10]
   for noisy_spec in tqdm(noisy_specnames):
     spectrogram = torch.from_numpy(np.load(noisy_spec))
