@@ -17,7 +17,7 @@ clean_list="tr05_org"
 
 noisy_path_list=""
 for x in $noisy_list; do
-    noisy_path_list="${noisy_path_list} ${diffwave}/CHiME4_full/${x}"
+    noisy_path_list="${noisy_path_list} ${diffwave}/spec/CHiME4_Noisy/${x}"
 done
 
 #stage 2: training model
