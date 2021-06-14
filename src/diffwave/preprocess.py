@@ -112,12 +112,11 @@ def choose_channel(n_files):
 
 
 def main(args):
-  filenames = glob(f'{args.dir}/**/*.wav', recursive=True)
+  filenames = glob(f'{args.dir}/*.wav', recursive=True)
   filenames=sorted(filenames)
   random.shuffle(filenames)
-  os.mkdir(args.outdir)
-  if args.se or args.test:
-    filenames = choose_channel(filenames)
+#   if args.se and args.train:
+#     filenames = choose_channel(filenames)
 
   if args.se:
     with ProcessPoolExecutor() as executor:
