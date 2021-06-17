@@ -24,11 +24,12 @@ from torch.utils.data.distributed import DistributedSampler
 
 
 class NumpyDataset(torch.utils.data.Dataset):
-  def __init__(self, wav_path, npy_paths):
+  def __init__(self, wav_path, npy_paths, se):
     super().__init__()
     # self.filenames = []
-    self.wav_path =wav_path
+    self.wav_path = wav_path
     self.specnames = []
+    self.se = se
     print(npy_paths)
     for path in npy_paths:
       self.specnames += glob(f'{path}/*.wav.spec.npy', recursive=True)
@@ -40,8 +41,12 @@ class NumpyDataset(torch.utils.data.Dataset):
     # audio_filename = self.filenames[idx]
     # spec_filename = f'{audio_filename}.spec.npy'
     spec_filename = self.specnames[idx]
-    spec_path = "/".join(spec_filename.split("/")[:-2])
-    audio_filename = spec_filename.replace(spec_path,self.wav_path).replace(".wav.spec.npy",".Clean.wav")
+    spec_path = "/".join(spec_filename.split("/")[:-2])+"/"
+    if self.se:
+      audio_filename = spec_filename.replace(spec_path, self.wav_path).replace(".wav.spec.npy", ".Clean.wav")
+    else:
+      audio_filename = spec_filename.replace(spec_path, self.wav_path).replace(".spec.npy", "")
+      # print(audio_filename,spec_filename)
     # name = "_".join(spec_filename.split("/")[-1].split(".")[0].split("_")[:-1]) + "_ORG.wav"
     # audio_filename = os.path.join(self.wav_path,name)
     signal, _ = torchaudio.load_wav(audio_filename)
@@ -82,8 +87,8 @@ class Collator:
     }
 
 
-def from_path(clean_dir, data_dirs, params, is_distributed=False):
-  dataset = NumpyDataset(clean_dir, data_dirs)
+def from_path(clean_dir, data_dirs, params, se=True, is_distributed=False):
+  dataset = NumpyDataset(clean_dir, data_dirs, se)
   return torch.utils.data.DataLoader(
       dataset,
       batch_size=params.batch_size,

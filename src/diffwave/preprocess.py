@@ -100,23 +100,26 @@ def spec_transform(filename,indir,outdir):
     np.save(f'{filename.replace(indir,outdir)}.spec.npy', spec)
 
 
-def choose_channel(n_files):
-    fins = []
-    n_ch_files = []
-    for n_ in n_files:
-        if n_.split(".")[0] in fins:
-            continue
-        n_ch_files.append(n_.split(".")[0] + ".CH" + str(random.randint(1,6))+ ".wav")
-        fins.append(n_.split(".")[0])
-    return n_ch_files
+# def choose_channel(n_files):
+#     fins = []
+#     n_ch_files = []
+#     for n_ in n_files:
+#         if n_.split(".")[0] in fins:
+#             continue
+#         n_ch_files.append(n_.split(".")[0] + ".CH" + str(random.randint(1,6))+ ".wav")
+#         fins.append(n_.split(".")[0])
+#     return n_ch_files
+
 
 
 def main(args):
-  filenames = glob(f'{args.dir}/*.wav', recursive=True)
+  if args.se:
+    filenames = glob(f'{args.dir}/*.wav', recursive=True)
+  else:
+    filenames = glob(f'{args.dir}/*.Clean.wav', recursive=True)
   filenames=sorted(filenames)
   random.shuffle(filenames)
-#   if args.se and args.train:
-#     filenames = choose_channel(filenames)
+
 
   if args.se:
     with ProcessPoolExecutor() as executor:
@@ -136,5 +139,6 @@ if __name__ == '__main__':
   parser.add_argument('--vocoder', dest='se', action='store_false')
   parser.add_argument('--train', dest='test', action='store_false')
   parser.add_argument('--test', dest='test', action='store_true')
-  parser.set_defaults(feature=False)
+  parser.set_defaults(se=True)
+  parser.set_defaults(test=False)
   main(parser.parse_args())
