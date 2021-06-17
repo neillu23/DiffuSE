@@ -122,10 +122,10 @@ def main(args):
 
 
   if args.se:
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=8) as executor:
         list(tqdm(executor.map(spec_transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
   else:
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=8) as executor:
         list(tqdm(executor.map(transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
 
 

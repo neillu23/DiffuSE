@@ -86,12 +86,17 @@ class SpectrogramUpsampler(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-  def __init__(self, n_mels, residual_channels, dilation):
+  def __init__(self, n_mels, residual_channels, dilation, fix2=False):
     super().__init__()
     self.dilated_conv = Conv1d(residual_channels, 2 * residual_channels, 3, padding=dilation, dilation=dilation)
     self.diffusion_projection = Linear(512, residual_channels)
     self.conditioner_projection = Conv1d(n_mels, 2 * residual_channels, 1)
     self.output_projection = Conv1d(residual_channels, 2 * residual_channels, 1)
+    if fix2:
+      self.separate = True
+      self.output_residual = Conv1d(residual_channels, residual_channels, 1)
+    else:
+      self.separate = False
 
   def forward(self, x, conditioner, diffusion_step):
     diffusion_step = self.diffusion_projection(diffusion_step).unsqueeze(-1)
@@ -103,20 +108,27 @@ class ResidualBlock(nn.Module):
     gate, filter = torch.chunk(y, 2, dim=1)
     y = torch.sigmoid(gate) * torch.tanh(filter)
 
-    y = self.output_projection(y)
-    residual, skip = torch.chunk(y, 2, dim=1)
+    if self.separate:
+      #calculate residual from non-fixed parameter
+      residual = self.output_residual(y)
+      #calculate skip from fixed parameter
+      y = self.output_projection(y)
+      _ , skip = torch.chunk(y, 2, dim=1)
+    else:
+      y = self.output_projection(y)
+      residual, skip = torch.chunk(y, 2, dim=1)
     return (x + residual) / sqrt(2.0), skip
 
 
 class DiffWave(nn.Module):
-  def __init__(self, params):
+  def __init__(self, args, params):
     super().__init__()
     self.params = params
     self.input_projection = Conv1d(1, params.residual_channels, 1)
     self.diffusion_embedding = DiffusionEmbedding(len(params.noise_schedule))
     self.spectrogram_upsampler = SpectrogramUpsampler(params.n_mels)
     self.residual_layers = nn.ModuleList([
-        ResidualBlock(params.n_mels, params.residual_channels, 2**(i % params.dilation_cycle_length))
+        ResidualBlock(params.n_mels, params.residual_channels, 2**(i % params.dilation_cycle_length), args.fix2)
         for i in range(params.residual_layers)
     ])
     self.skip_projection = Conv1d(params.residual_channels, params.residual_channels, 1)

@@ -1,9 +1,10 @@
 export CUDA_VISIBLE_DEVICES='4,7'
 
 stage=2
-task="vocoder" #"vocoder" or "se"
-model_name="model_vocoder_full"
-
+task="se" #"vocoder" or "se"
+model_name="model_se_full_fix2"
+pretrain_model="model_vocoder_full/weights-401400.pt"
+fix="--fix2"
 . ./path.sh
 
 chime4_noisy="${chime4}/isolated/"
@@ -53,7 +54,10 @@ if [ ${stage} -le 2 ]; then
         spec_path=${spec_root}/${x}
         train_spec_list="${train_spec_list} ${spec_path}"
     done
-
-    python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task}
+    if [ -z "$pretrain_model" ]; then
+        python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task}
+    else
+        python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task} --pretrain ${diffwave}/${pretrain_model} ${fix}
+    fi
 fi
 

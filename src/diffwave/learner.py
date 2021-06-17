@@ -78,6 +78,8 @@ class DiffWaveLearner:
         model_state_dict.pop("residual_layers.{}.conditioner_projection.weight".format(i), None)
     if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
       if pretrain:
+        # Missing key(s) in state_dict:"residual_layers.{i}.conditioner_projection.weight" 
+        # Missing key(s) in state_dict:"residual_layers.{i}.output_residual.{weight,bias}" 
         self.model.module.load_state_dict(model_state_dict, strict=False)
       else:
         self.model.module.load_state_dict(state_dict['model'])
@@ -107,8 +109,9 @@ class DiffWaveLearner:
   def restore_from_checkpoint(self,pretrain_path=None, filename='weights'):
     # pdb.set_trace()
     if pretrain_path!=None:
+      print(f'load pretrain model at {pretrain_path}')
       checkpoint = torch.load(pretrain_path)
-      self.load_state_dict(checkpoint,True)
+      self.load_state_dict(checkpoint,pretrain=True)
     else:
       try:
         checkpoint = torch.load(f'{self.model_dir}/{filename}.pt')
@@ -117,15 +120,24 @@ class DiffWaveLearner:
       except FileNotFoundError:
         return False
 
+  def fix_parameter2(self):
+    self.fix_parameter()
+    if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
+      for layer in self.model.module.residual_layers:
+        for param in layer.output_projection.parameters():
+          param.requires_grad = False
+    else:
+      for layer in self.model.residual_layers:
+        for param in layer.output_projection.parameters():
+          param.requires_grad = False
+
+
+        
   def fix_parameter(self):
     # pdb.set_trace()
     for param in self.model.parameters():
       param.requires_grad = True
     if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
-      for layer in self.model.module.residual_layers:
-        for param in layer.output_projection.parameters():
-          param.requires_grad = False
-
       for param in self.model.module.skip_projection.parameters():
         param.requires_grad = False
 
@@ -133,10 +145,6 @@ class DiffWaveLearner:
         param.requires_grad = False
         
     else:
-      for layer in self.model.residual_layers:
-        for param in layer.output_projection.parameters():
-          param.requires_grad = False
-
       for param in self.model.skip_projection.parameters():
         param.requires_grad = False
 
@@ -207,12 +215,14 @@ def _train_impl(replica_id, model, dataset, args, params):
   learner.restore_from_checkpoint(args.pretrain_path)
   if args.pretrain_path != None and args.fix:
     learner.fix_parameter()
+  if args.pretrain_path != None and args.fix2:
+    learner.fix_parameter2()
   learner.train(max_steps=args.max_steps)
 
 
 def train(args, params):
   dataset = dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se)
-  model = DiffWave(params).cuda()
+  model = DiffWave(args, params).cuda()
   _train_impl(0, model, dataset, args, params)
 
 
@@ -223,6 +233,6 @@ def train_distributed(replica_id, replica_count, port, args, params):
 
   device = torch.device('cuda', replica_id)
   torch.cuda.set_device(device)
-  model = DiffWave(params).to(device)
+  model = DiffWave(args, params).to(device)
   model = DistributedDataParallel(model, device_ids=[replica_id], find_unused_parameters=True)
   _train_impl(replica_id, model, dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se, is_distributed=True), args, params)
