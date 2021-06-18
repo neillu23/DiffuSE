@@ -1,9 +1,9 @@
 export CUDA_VISIBLE_DEVICES='4,7'
 
-stage=2
+stage=1
 task="se" #"vocoder" or "se"
 model_name="model_se_full_fix2"
-pretrain_model="model_vocoder_full/weights-401400.pt"
+# pretrain_model="model_vocoder_full/weights-401400.pt"
 fix="--fix2"
 . ./path.sh
 
@@ -55,7 +55,7 @@ if [ ${stage} -le 2 ]; then
         train_spec_list="${train_spec_list} ${spec_path}"
     done
     if [ -z "$pretrain_model" ]; then
-        python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task}
+        python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task} ${fix}
     else
         python src/diffwave/__main__.py ${diffwave}/${model_name} ${target_wav_root}  ${train_spec_list}  --${task} --pretrain ${diffwave}/${pretrain_model} ${fix}
     fi

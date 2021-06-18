@@ -46,7 +46,7 @@ def make_spectrum(filename=None, y=None, is_slice=False, feature_type='logmag', 
     ### Normalize waveform
     y = y / np.max(abs(y)) # / 2.
 
-    D = librosa.stft(y,center=False, n_fft=FRAMELENGTH, hop_length=SHIFT,win_length=FRAMELENGTH,window=scipy.signal.hamming)
+    D = librosa.stft(y, n_fft=FRAMELENGTH, hop_length=SHIFT,win_length=FRAMELENGTH,window=scipy.signal.hamming)
     utt_len = D.shape[-1]
     phase = np.exp(1j * np.angle(D))
     D = np.abs(D)
@@ -87,12 +87,10 @@ def transform(filename,indir,outdir):
       'normalized': True,
   }
   mel_spec_transform = TT.MelSpectrogram(**mel_args)
-
   with torch.no_grad():
     spectrogram = mel_spec_transform(audio)
     spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
     spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
-    # print(spectrogram.shape)
     np.save(f'{filename.replace(indir,outdir)}.spec.npy', spectrogram.cpu().numpy()) 
 
 def spec_transform(filename,indir,outdir):
