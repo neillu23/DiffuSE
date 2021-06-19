@@ -98,32 +98,26 @@ def spec_transform(filename,indir,outdir):
     np.save(f'{filename.replace(indir,outdir)}.spec.npy', spec)
 
 
-# def choose_channel(n_files):
-#     fins = []
-#     n_ch_files = []
-#     for n_ in n_files:
-#         if n_.split(".")[0] in fins:
-#             continue
-#         n_ch_files.append(n_.split(".")[0] + ".CH" + str(random.randint(1,6))+ ".wav")
-#         fins.append(n_.split(".")[0])
-#     return n_ch_files
-
-
 
 def main(args):
   if args.se:
+    params.n_mels = 513
+  else:
+    params.n_mels = 80
+
+  if args.se or args.voicebank:
     filenames = glob(f'{args.dir}/*.wav', recursive=True)
   else:
     filenames = glob(f'{args.dir}/*.Clean.wav', recursive=True)
-  filenames=sorted(filenames)
-  random.shuffle(filenames)
+#   filenames=sorted(filenames)
+#   random.shuffle(filenames)
 
 
   if args.se:
-    with ProcessPoolExecutor(max_workers=8) as executor:
+    with ProcessPoolExecutor(max_workers=10) as executor:
         list(tqdm(executor.map(spec_transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
   else:
-    with ProcessPoolExecutor(max_workers=8) as executor:
+    with ProcessPoolExecutor(max_workers=10) as executor:
         list(tqdm(executor.map(transform, filenames, repeat(args.dir), repeat(args.outdir)), desc='Preprocessing', total=len(filenames)))
 
 
@@ -137,6 +131,8 @@ if __name__ == '__main__':
   parser.add_argument('--vocoder', dest='se', action='store_false')
   parser.add_argument('--train', dest='test', action='store_false')
   parser.add_argument('--test', dest='test', action='store_true')
+  parser.add_argument('--voicebank', dest='voicebank', action='store_true')
   parser.set_defaults(se=True)
   parser.set_defaults(test=False)
+  parser.set_defaults(voicebank=False)
   main(parser.parse_args())

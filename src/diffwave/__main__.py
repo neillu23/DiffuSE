@@ -29,6 +29,11 @@ def _get_free_port():
 
 def main(args):
   replica_count = device_count()
+  if args.se:
+    params.n_mels = 513
+  else:
+    params.n_mels = 80
+        
   if replica_count > 1:
     if params.batch_size % replica_count != 0:
       raise ValueError(f'Batch size {params.batch_size} is not evenly divisble by # GPUs {replica_count}.')
@@ -58,7 +63,9 @@ if __name__ == '__main__':
   parser.add_argument('--fix2', dest='fix2', action='store_true')
   parser.add_argument('--pretrain_path', default=None, type=str,
       help='pretrain model path if there is a pretrain vocoder model, load_state_dict strict=False')
+  parser.add_argument('--voicebank', dest='voicebank', action='store_true')
   parser.set_defaults(se=True)
   parser.set_defaults(fix=False)
   parser.set_defaults(fix2=False)
+  parser.set_defaults(voicebank=False)
   main(parser.parse_args())

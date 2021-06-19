@@ -221,7 +221,7 @@ def _train_impl(replica_id, model, dataset, args, params):
 
 
 def train(args, params):
-  dataset = dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se)
+  dataset = dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se, voicebank=args.voicebank)
   model = DiffWave(args, params).cuda()
   _train_impl(0, model, dataset, args, params)
 
@@ -234,5 +234,5 @@ def train_distributed(replica_id, replica_count, port, args, params):
   device = torch.device('cuda', replica_id)
   torch.cuda.set_device(device)
   model = DiffWave(args, params).to(device)
-  model = DistributedDataParallel(model, device_ids=[replica_id], find_unused_parameters=True)
-  _train_impl(replica_id, model, dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se, is_distributed=True), args, params)
+  model = DistributedDataParallel(model, device_ids=[replica_id]) #, find_unused_parameters=True)
+  _train_impl(replica_id, model, dataset_from_path(args.clean_dir, args.data_dirs, params, se=args.se, voicebank=args.voicebank, is_distributed=True), args, params)
