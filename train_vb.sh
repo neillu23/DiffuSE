@@ -1,10 +1,10 @@
-export CUDA_VISIBLE_DEVICES='4,7'
+export CUDA_VISIBLE_DEVICES='1,9'
 
 stage=2
-task="se" #"vocoder" or "se"
-model_name="voicebank_model_se_fix_in"
+task="vocoder" #"vocoder" or "se"
+model_name="voicebank_model_vocoder_traindev"
 # pretrain_model="voicebank_model_vocoder/weights-253050.pt"
-fix="--fix_in"
+# fix="--fix_in"
 . ./path.sh
 
 voicebank_noisy="${voicebank}/noisy_trainset_28spk_wav_16k"
@@ -31,11 +31,15 @@ fi
 if [ ${stage} -le 1 ]; then
     echo "stage 1 : preparing training data"
     wave_path=${wav_root}
-    spec_path=${spec_root} 
-    echo "create ${spec_type} from ${wave_path} to ${spec_path}"
-    rm -r ${spec_path} 2>/dev/null
-    mkdir -p ${spec_path}
-    python src/diffwave/preprocess.py ${wave_path} ${spec_path} --${task} --voicebank
+    echo "create ${spec_type} from ${wave_path} to ${spec_root}"
+    rm -r ${spec_root} 2>/dev/null
+    mkdir -p ${spec_root}
+    python src/diffwave/preprocess.py ${wave_path} ${spec_root} --${task} --voicebank
+    mkdir -p ${spec_root}/train
+    mkdir -p ${spec_root}/valid
+    mv ${spec_root}/p226_*.wav.spec.npy ${spec_root}/valid
+    mv ${spec_root}/p287_*.wav.spec.npy ${spec_root}/valid
+    mv ${spec_root}/*.wav.spec.npy ${spec_root}/train
 
 fi
 
@@ -45,7 +49,7 @@ if [ ${stage} -le 2 ]; then
 
     train_spec_list=""
 
-    spec_path=${spec_root}
+    spec_path=${spec_root}/train
     train_spec_list="${train_spec_list} ${spec_path}"
     
     if [ -z "$pretrain_model" ]; then
