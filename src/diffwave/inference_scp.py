@@ -182,11 +182,11 @@ if __name__ == '__main__':
   parser.add_argument('--fast', '-f', action='store_true',
       help='fast sampling procedure')
   parser.add_argument('--fix', dest='fix', action='store_true')
-  parser.add_argument('--fix2', dest='fix2', action='store_true')
+  parser.add_argument('--fix_in', dest='fix2', action='store_true')
   parser.add_argument('--se', dest='se', action='store_true')
   parser.add_argument('--vocoder', dest='se', action='store_false')
   parser.set_defaults(se=True)
   parser.set_defaults(fix=False)
-  parser.set_defaults(fix2=False)
+  parser.set_defaults(fix_in=False)
   parser.set_defaults(voicebank=False)
   main(parser.parse_args())
