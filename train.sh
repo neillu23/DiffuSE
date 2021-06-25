@@ -1,10 +1,10 @@
-export CUDA_VISIBLE_DEVICES='4,7'
+export CUDA_VISIBLE_DEVICES='4,1'
 
-stage=1
+stage=2
 task="se" #"vocoder" or "se"
-model_name="model_se_full_fix2"
-# pretrain_model="model_vocoder_full/weights-401400.pt"
-fix="--fix2"
+model_name="model_se_fix1"
+pretrain_model="model_vocoder_full/weights-401400.pt"
+fix="--fix"
 . ./path.sh
 
 chime4_noisy="${chime4}/isolated/"

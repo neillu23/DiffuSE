@@ -57,8 +57,7 @@ if __name__ == '__main__':
   parser.add_argument('--fp16', action='store_true', default=False,
       help='use 16-bit floating point operations for training')
   parser.add_argument('--se', dest='se', action='store_true')
-  parser.add_argument('--vocoder', dest='se', action='store_false',
-      help='fix parameters in several layers near output')
+  parser.add_argument('--vocoder', dest='se', action='store_false')
   parser.add_argument('--fix', dest='fix', action='store_true')
   parser.add_argument('--fix2', dest='fix2', action='store_true')
   parser.add_argument('--pretrain_path', default=None, type=str,

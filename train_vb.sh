@@ -1,10 +1,10 @@
 export CUDA_VISIBLE_DEVICES='4,7'
 
 stage=2
-task="vocoder" #"vocoder" or "se"
-model_name="voicebank_model_vocoder"
-#pretrain_model="model_vocoder_full/weights-401400.pt"
-#fix="--fix2"
+task="se" #"vocoder" or "se"
+model_name="voicebank_model_se_fix_in"
+# pretrain_model="voicebank_model_vocoder/weights-253050.pt"
+fix="--fix_in"
 . ./path.sh
 
 voicebank_noisy="${voicebank}/noisy_trainset_28spk_wav_16k"

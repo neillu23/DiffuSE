@@ -31,14 +31,14 @@ random.seed(23)
 
 models = {}
 
-def predict(spectrogram, model_dir=None, params=None, device=torch.device('cuda'), fast_sampling=False):
+def predict(spectrogram, args, model_dir=None, params=None, device=torch.device('cuda'), fast_sampling=False):
   # Lazy load model.
   if not model_dir in models:
     if os.path.exists(f'{model_dir}/weights.pt'):
       checkpoint = torch.load(f'{model_dir}/weights.pt')
     else:
       checkpoint = torch.load(model_dir)
-    model = DiffWave(AttrDict(base_params)).to(device)
+    model = DiffWave(args, AttrDict(base_params)).to(device)
     model.load_state_dict(checkpoint['model'])
     model.eval()
     models[model_dir] = model
@@ -102,7 +102,7 @@ def main(args):
   specnames = specnames[:20]
   for spec in tqdm(specnames):
     spectrogram = torch.from_numpy(np.load(spec))
-    audio, sr = predict(spectrogram, model_dir=args.model_dir, fast_sampling=args.fast)
+    audio, sr = predict(spectrogram,args, model_dir=args.model_dir, fast_sampling=args.fast)
     output_path = os.path.join(args.output, spec.split("/")[-2])
     if not os.path.exists(output_path):
       os.makedirs(output_path)
@@ -120,4 +120,7 @@ if __name__ == '__main__':
       help='output path name')
   parser.add_argument('--fast', '-f', action='store_true',
       help='fast sampling procedure')
+  parser.add_argument('--voicebank', dest='voicebank', action='store_true')
+  parser.set_defaults(fix2=False)
+  parser.set_defaults(voicebank=False)
   main(parser.parse_args())

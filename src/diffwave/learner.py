@@ -120,8 +120,9 @@ class DiffWaveLearner:
       except FileNotFoundError:
         return False
 
-  def fix_parameter2(self):
+  def fix_parameter_in(self):
     self.fix_parameter()
+    print("Fix Parameter on the output of residual layer")
     if hasattr(self.model, 'module') and isinstance(self.model.module, nn.Module):
       for layer in self.model.module.residual_layers:
         for param in layer.output_projection.parameters():
@@ -134,6 +135,7 @@ class DiffWaveLearner:
 
         
   def fix_parameter(self):
+    print("Fix Parameter outside the residual layer")
     # pdb.set_trace()
     for param in self.model.parameters():
       param.requires_grad = True
@@ -213,10 +215,12 @@ def _train_impl(replica_id, model, dataset, args, params):
   learner = DiffWaveLearner(args.model_dir, model, dataset, opt, params, fp16=args.fp16)
   learner.is_master = (replica_id == 0)
   learner.restore_from_checkpoint(args.pretrain_path)
-  if args.pretrain_path != None and args.fix:
+  if args.fix:
     learner.fix_parameter()
-  if args.pretrain_path != None and args.fix2:
-    learner.fix_parameter2()
+  elif args.fix_in:
+    learner.fix_parameter_in()
+  else:
+    print("Fix no parameters")
   learner.train(max_steps=args.max_steps)
 
 
