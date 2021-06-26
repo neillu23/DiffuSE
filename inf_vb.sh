@@ -1,7 +1,7 @@
 export CUDA_VISIBLE_DEVICES='1' 
 
 stage=2
-ckp="248712"
+ckp="143100"
 task="vocoder" #"vocoder" or "se"
 model_name="voicebank_model_vocoder"
 
@@ -51,5 +51,5 @@ if [ ${stage} -le 2 ]; then
     mkdir -p ${enhanced_path} 
     echo "inference enhanced wav file from ${spec_root} to ${enhanced_path}"
     
-    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} -o ${enhanced_path} --voicebank
+    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --voicebank
 fi
