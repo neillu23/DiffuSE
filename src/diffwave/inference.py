@@ -105,6 +105,10 @@ def predict(spectrogram, model, noisy_signal, alpha, beta, alpha_cum, T, device=
 
 
 def main(args):
+  if args.se:
+    base_params.n_mels = 513
+  else:
+    base_params.n_mels = 80
   specnames = []
   print("spectrum:",args.spectrogram_path)
   print("noisy_signal:",args.wav_path)
@@ -139,7 +143,10 @@ if __name__ == '__main__':
       help='output path name')
   parser.add_argument('--fast', '-f', action='store_true',
       help='fast sampling procedure')
+  parser.add_argument('--se', dest='se', action='store_true')
+  parser.add_argument('--vocoder', dest='se', action='store_false')
   parser.add_argument('--voicebank', dest='voicebank', action='store_true')
+  parser.set_defaults(se=True)
   parser.set_defaults(fix_in=False)
   parser.set_defaults(voicebank=False)
   main(parser.parse_args())

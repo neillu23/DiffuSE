@@ -1,9 +1,8 @@
-export CUDA_VISIBLE_DEVICES='1' 
 
-stage=2
-ckp="143100"
-task="vocoder" #"vocoder" or "se"
-model_name="voicebank_model_vocoder"
+stage=$1
+ckp=$2
+task=$3 #"vocoder" or "se"
+model_name=$4
 
 . ./path.sh
 
@@ -46,10 +45,21 @@ if [ ${stage} -le 2 ]; then
 
     test_spec_list=${spec_root}
     
-    enhanced_path=${diffwave}/Enhanced/${model_name}/model${ckp}/
+    enhanced_path=${diffwave}/Enhanced/${model_name}/model${ckp}/test
     rm -r ${enhanced_path} 2>/dev/null
     mkdir -p ${enhanced_path} 
     echo "inference enhanced wav file from ${spec_root} to ${enhanced_path}"
     
-    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --voicebank
+    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --${task} --voicebank
+fi
+if [ ${stage} -le 3 ]; then
+    echo "stage 3 : scoring"
+    
+    score_file=${diffwave}/Enhanced/${model_name}/scores.csv
+    clean_wav=${voicebank_clean}
+    enhanced_result=${diffwave}/Enhanced/${model_name}/model${ckp}/test
+    echo "save the score to ${score_file}"
+    cd pesq/speech-metrics/
+    python main.py ${clean_wav} ${enhanced_result} ${score_file} model${ckp}
+    cd -
 fi

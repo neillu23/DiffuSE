@@ -1,4 +1,4 @@
-stage=$1
+../../valid_vb.shstage=$1
 ckp=$2
 task="vocoder" #"vocoder" or "se"
 model_name="voicebank_model_vocoder"
@@ -49,14 +49,13 @@ if [ ${stage} -le 2 ]; then
     mkdir -p ${enhanced_path} 
     echo "inference enhanced wav file from ${spec_root} to ${enhanced_path}"
     
-    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --voicebank
+    python src/diffwave/inference.py  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --${task} --voicebank
 fi
 
 if [ ${stage} -le 3 ]; then
     echo "stage 3 : scoring"
-    
     score_file=${diffwave}/Enhanced/${model_name}/scores.csv
-    clean_wav=/mnt/Data/user_vol_2/user_neillu/Diffwave/clean_dev/
+    clean_wav=${diffwave}/clean_dev/
     enhanced_result=${diffwave}/Enhanced/${model_name}/model${ckp}/valid
     echo "save the score to ${score_file}"
     cd pesq/speech-metrics/
