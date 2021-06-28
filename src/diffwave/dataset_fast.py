@@ -51,7 +51,7 @@ class NumpyDataset(torch.utils.data.Dataset):
 
 
   def __len__(self):
-    return len(self.specnames)
+    return len(self.spectrograms)
 
   def __getitem__(self, idx):
     signal = self.signals[idx]
