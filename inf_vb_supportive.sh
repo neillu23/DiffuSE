@@ -42,7 +42,6 @@ fi
 
 if [ ${stage} -le 2 ]; then
     echo "stage 2 : inference model"
-    target_wav_root=${voicebank_clean}
 
     test_spec_list=${spec_root}
     
@@ -51,8 +50,9 @@ if [ ${stage} -le 2 ]; then
     mkdir -p ${enhanced_path} 
     echo "inference enhanced wav file from ${spec_root} to ${enhanced_path}"
     
-    python src/diffwave/inference_supportive.py --${schedule}  ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path}  --${task} --voicebank
+    python src/diffwave/inference_supportive.py --${schedule} ${diffwave}/${model_name}/weights-${ckp}.pt ${test_spec_list} ${voicebank_noisy} -o ${enhanced_path} --${task} --voicebank
 fi
+
 if [ ${stage} -le 3 ]; then
     echo "stage 3 : scoring"
     

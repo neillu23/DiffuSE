@@ -94,7 +94,7 @@ class ResidualBlock(nn.Module):
     self.split = split
     self.fix_in = fix_in
     if self.split:
-      print("2 individual Conv1d")
+      # print("2 individual Conv1d")
       self.output_projection = Conv1d(residual_channels, residual_channels, 1)
       self.output_residual = Conv1d(residual_channels, residual_channels, 1)
     else:

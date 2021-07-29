@@ -118,15 +118,17 @@ def main(args):
   model = load_model(model_dir=args.model_dir ,args=args)
   alpha, beta, alpha_cum, T = inference_schedule(model, fast_sampling=args.fast)
 
+
+  output_path = os.path.join(args.output, specnames[0].split("/")[-2])
+  if not os.path.exists(output_path):
+    os.makedirs(output_path)
+
   for spec in tqdm(specnames):
     spectrogram = torch.from_numpy(np.load(spec))
-    noisy_signal, _ = torchaudio.load_wav(os.path.join(args.wav_path,spec.split("/")[-1].replace(".spec.npy","")))
-    wlen = noisy_signal.shape[1]
-    audio, sr = predict(spectrogram, model, noisy_signal, alpha, beta, alpha_cum, T)
-    audio = audio[:,:wlen]
-    output_path = os.path.join(args.output, spec.split("/")[-2])
-    if not os.path.exists(output_path):
-      os.makedirs(output_path)
+    # noisy_signal, _ = torchaudio.load_wav(os.path.join(args.wav_path,spec.split("/")[-1].replace(".spec.npy","")))
+    # wlen = noisy_signal.shape[1]
+    audio, sr = predict(spectrogram, model, [], alpha, beta, alpha_cum, T)
+    # audio = audio[:,:wlen]
     output_name = os.path.join(output_path, spec.split("/")[-1].replace(".spec.npy", ""))
     torchaudio.save(output_name, audio.cpu(), sample_rate=sr)
 
